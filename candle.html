@@ -34,9 +34,10 @@
 <script>
 // globals for debug/console convenience
 var imageValues = new Array();
-var drawCount = 0;
+var sampleCount = 0;
 
 var sampler = {
+  fps: 1000/60, // or 1000/30
   handleEvent: function(evt) {
     switch (evt.type) {
       case 'DOMContentLoaded' :
@@ -46,7 +47,7 @@ var sampler = {
         document.getElementById('report').textContent = '';
         break;
       case 'play' :
-        this.draw();
+        this.takeSample();
         break;
       case 'ended' :
       case 'pause' :
@@ -90,7 +91,7 @@ sampler.init = function(){
   this.video.addEventListener('ended', this, false);
 };
 
-sampler.draw = function() {
+sampler.takeSample = function() {
   var video = this.video;
   var ctx = this.context;
   var sampleArea = this.sampleArea;
@@ -102,12 +103,12 @@ sampler.draw = function() {
                 sampleArea.width, sampleArea.height,
                 0, 0, 2, 2);
   // only capture image data from the first 30 seconds
-  if (drawCount < (30 * 30)) {
+  if (sampleCount < (30 * 30)) {
     var imageData = ctx.getImageData(0, 0, 1, 1);
-    imageValues[drawCount] = imageData.data.slice(0, 3);
+    imageValues[sampleCount] = imageData.data.slice(0, 3);
   }
-  drawCount++;
-  setTimeout(sampler.draw,1000/30);
+  sampleCount++;
+  setTimeout(sampler.takeSample, sampler.fps);
 }.bind(sampler);
 
 sampler.report = function() {
@@ -159,6 +160,7 @@ sampler.playbackSingleChannel = function(data) {
   var dataRows = (data || imageValues).map(function(rgb) {
     return Math.floor((rgb[0] + rgb[1] + rgb[2]) / 3);
   });
+  console.log('playback with data: ', dataRows);
   var ctx = this.context;
   var rowIndex = 0;
   var direction = 1;
@@ -167,12 +169,11 @@ sampler.playbackSingleChannel = function(data) {
   // get next value to output
   function loop() {
     var value = dataRows[rowIndex];
-    console.log(value +
-                ',' +
-                rowIndex +
-                '/' +
-                lastRow);
-    // analogWrite(outPin, value);
+    // console.log(value +
+    //             ',' +
+    //             rowIndex +
+    //             '/' +
+    //             lastRow);
     ctx.clearRect(0, 0, 1, 1);
     ctx.fillStyle = 'rgb(' + [value, value, value].join(',') + ')';
     ctx.fillRect(0, 0, 1, 1)
