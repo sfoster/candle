@@ -51,8 +51,8 @@ var sampler = {
       case 'ended' :
       case 'pause' :
         this.stop();
-        this.report();
-        this.playback();
+        this.reportSingleChannel();
+        this.playbackSingleChannel();
         break;
     }
   }
@@ -121,6 +121,18 @@ sampler.report = function() {
   document.getElementById('report').textContent = lines.trim();
 };
 
+sampler.reportSingleChannel = function() {
+  var byteCount = imageValues.reduce(function(previousValue, currentValue, index, array) {
+    return previousValue + (currentValue.byteLength);
+  }, 0);
+  console.log('samples: ', imageValues.length, 'bytes: ' + byteCount);
+  var lines = imageValues.map((rgb) => {
+    var x = Math.floor((rgb[0] + rgb[1] + rgb[2]) / 3);
+    return x;
+  }).join(', ');
+  document.getElementById('report').textContent = lines.trim();
+};
+
 sampler.playback = function(data) {
   data = data || imageValues;
   console.log('playback with data: ', data);
@@ -142,8 +154,43 @@ sampler.playback = function(data) {
       ctx.fillRect(0, 0, 1, 1)
     }
   }, 30);
-
 };
+sampler.playbackSingleChannel = function(data) {
+  var dataRows = (data || imageValues).map(function(rgb) {
+    return Math.floor((rgb[0] + rgb[1] + rgb[2]) / 3);
+  });
+  var ctx = this.context;
+  var rowIndex = 0;
+  var direction = 1;
+  var lastRow = -1 + dataRows.length;
+
+  // get next value to output
+  function loop() {
+    var value = dataRows[rowIndex];
+    console.log(value +
+                ',' +
+                rowIndex +
+                '/' +
+                lastRow);
+    // analogWrite(outPin, value);
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = 'rgb(' + [value, value, value].join(',') + ')';
+    ctx.fillRect(0, 0, 1, 1)
+
+    // advance to the next position in the data array:
+    rowIndex += direction;
+    // if we're at the end of the array...
+    if (rowIndex >= lastRow) {
+      direction = -1;
+      rowIndex = lastRow;
+    } else if(rowIndex <= 0) {
+      direction = 1;
+      rowIndex = 0;
+    }
+  }
+  setInterval(loop, 1000/30);
+}
+
 sampler.stop = function() {
   if (this._playbackTimer) {
     clearTimeout(this._playbackTimer);
