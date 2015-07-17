@@ -23,7 +23,7 @@
 </div>
 <hr style="clear: both"/>
 <div class="wrapper" style="float: left; position: relative">
-  <video id="v" loop controls src="./sources/flicker-candle.ogv"></video>
+  <video id="v" loop controls src="./sources/candle-clip.ogv"></video>
   <div id="sourceMarker"></div>
 </div>
 <div class="wrapper" style="float: left; position: relative">
@@ -70,10 +70,10 @@ sampler.init = function(){
   canvas.height = ch;
 
   var sampleArea = this.sampleArea = {
-    x: 92,
+    x: 186,
     y: 85
   };
-  sampleArea.width = 50;
+  sampleArea.width = 60;
   sampleArea.height = 80;
   sampleArea.left = sampleArea.x - (sampleArea.width/2);
   sampleArea.top = sampleArea.y - (sampleArea.height/2);
@@ -154,7 +154,7 @@ sampler.playback = function(data) {
       ctx.fillStyle = 'rgb(' + rgb.join(',') + ')';
       ctx.fillRect(0, 0, 1, 1)
     }
-  }, 30);
+  }, sampler.fps);
 };
 sampler.playbackSingleChannel = function(data) {
   var dataRows = (data || imageValues).map(function(rgb) {
@@ -189,7 +189,7 @@ sampler.playbackSingleChannel = function(data) {
       rowIndex = 0;
     }
   }
-  setInterval(loop, 1000/30);
+  setInterval(loop, sampler.fps);
 }
 
 sampler.stop = function() {
